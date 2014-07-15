@@ -22,6 +22,7 @@ import com.tencent.mm.sdk.openapi.ConstantsAPI;
 import com.tencent.mm.sdk.openapi.GetMessageFromWX;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.IWXAPIEventHandler;
+import com.tencent.mm.sdk.openapi.SendMessageToWX;
 import com.tencent.mm.sdk.openapi.ShowMessageFromWX;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
 import com.tencent.mm.sdk.openapi.WXAppExtendObject;
@@ -107,7 +108,7 @@ public class WXEntryActivity extends ActionBarActivity implements
 
 	@Override
 	public void onResp(BaseResp resp) {
-
+		finish();
 	}
 
 	@Override
@@ -126,10 +127,11 @@ public class WXEntryActivity extends ActionBarActivity implements
 					wxAppExtendObject.filePath = sendFile.getPath();
 					WXMediaMessage msg = new WXMediaMessage();
 					msg.mediaObject = wxAppExtendObject;
-					GetMessageFromWX.Resp resp = new GetMessageFromWX.Resp();
-					resp.transaction = getTransaction();
-					resp.message = msg;
-					iwxapi.sendResp(resp);
+					SendMessageToWX.Req req = new SendMessageToWX.Req();
+					req.transaction = getTransaction();
+					req.message = msg;
+					req.scene = SendMessageToWX.Req.WXSceneSession;
+					iwxapi.sendReq(req);
 					finish();
 				} catch (Exception e) {
 					e.printStackTrace();
