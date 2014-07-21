@@ -6,5 +6,7 @@
     <string name="action_settings">Settings</string>
     
     <string name="upload_dialog_title">Select a file to upload</string>
-
+    <string name="send_toolarge">This file is too large(8 MB at most)</string>
+    
+    
 </resources>

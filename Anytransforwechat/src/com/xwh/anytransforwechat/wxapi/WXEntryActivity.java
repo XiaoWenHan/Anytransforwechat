@@ -1,13 +1,8 @@
 package com.xwh.anytransforwechat.wxapi;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.Locale;
-
 import org.json.JSONObject;
-
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -15,7 +10,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.widget.Toast;
-
 import com.tencent.mm.sdk.openapi.BaseReq;
 import com.tencent.mm.sdk.openapi.BaseResp;
 import com.tencent.mm.sdk.openapi.ConstantsAPI;
@@ -108,7 +102,7 @@ public class WXEntryActivity extends ActionBarActivity implements
 
 	@Override
 	public void onResp(BaseResp resp) {
-		finish();
+
 	}
 
 	@Override
@@ -120,23 +114,31 @@ public class WXEntryActivity extends ActionBarActivity implements
 				try {
 					File sendFile = new File(getPath(getApplicationContext(),
 							data.getData()));
-					JSONObject jsonObject = new JSONObject();
-					jsonObject.put("filename", sendFile.getName());
-					WXAppExtendObject wxAppExtendObject = new WXAppExtendObject();
-					wxAppExtendObject.extInfo = jsonObject.toString();
-					wxAppExtendObject.filePath = sendFile.getPath();
-					WXMediaMessage msg = new WXMediaMessage();
-					msg.mediaObject = wxAppExtendObject;
-					SendMessageToWX.Req req = new SendMessageToWX.Req();
-					req.transaction = getTransaction();
-					req.message = msg;
-					req.scene = SendMessageToWX.Req.WXSceneSession;
-					iwxapi.sendReq(req);
-					finish();
+					if (sendFile.length() * 1.0 / 1024 / 1024 > 8) {
+						Toast.makeText(
+								WXEntryActivity.this,
+								getResources()
+										.getString(R.string.send_toolarge),
+								Toast.LENGTH_LONG).show();
+					} else {
+						JSONObject jsonObject = new JSONObject();
+						jsonObject.put("filename", sendFile.getName());
+						WXAppExtendObject wxAppExtendObject = new WXAppExtendObject();
+						wxAppExtendObject.extInfo = jsonObject.toString();
+						wxAppExtendObject.filePath = sendFile.getPath();
+						WXMediaMessage msg = new WXMediaMessage();
+						msg.mediaObject = wxAppExtendObject;
+						SendMessageToWX.Req req = new SendMessageToWX.Req(
+								getIntent().getExtras());
+						GetMessageFromWX.Resp resp = new GetMessageFromWX.Resp();
+						resp.transaction = req.transaction;
+						resp.message = msg;
+						iwxapi.sendResp(resp);
+						finish();
+					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
-
 			}
 			break;
 
@@ -183,32 +185,6 @@ public class WXEntryActivity extends ActionBarActivity implements
 			{ ".wps", "application/vnd.ms-works" }, { ".xml", "text/plain" },
 			{ ".z", "application/x-compress" }, { ".zip", "application/zip" },
 			{ "", "*/*" } };
-
-	private String getTransaction() {
-		final GetMessageFromWX.Req req = new GetMessageFromWX.Req(getIntent()
-				.getExtras());
-		return req.transaction;
-	}
-
-	// File转Byte
-	public static byte[] getBytesFromFile(File f) {
-		if (f == null) {
-			return null;
-		}
-		try {
-			FileInputStream stream = new FileInputStream(f);
-			ByteArrayOutputStream out = new ByteArrayOutputStream(1000);
-			byte[] b = new byte[1000];
-			int n;
-			while ((n = stream.read(b)) != -1)
-				out.write(b, 0, n);
-			stream.close();
-			out.close();
-			return out.toByteArray();
-		} catch (IOException e) {
-		}
-		return null;
-	}
 
 	// 从通用URI解析文件完整路径
 	public static String getPath(Context context, Uri uri) {
