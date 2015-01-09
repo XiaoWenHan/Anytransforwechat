@@ -2,7 +2,9 @@ package com.xwh.anytransforwechat.wxapi;
 
 import java.io.File;
 import java.util.Locale;
+
 import org.json.JSONObject;
+
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -10,17 +12,18 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.widget.Toast;
+
 import com.tencent.mm.sdk.openapi.BaseReq;
 import com.tencent.mm.sdk.openapi.BaseResp;
 import com.tencent.mm.sdk.openapi.ConstantsAPI;
 import com.tencent.mm.sdk.openapi.GetMessageFromWX;
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.IWXAPIEventHandler;
-import com.tencent.mm.sdk.openapi.SendMessageToWX;
 import com.tencent.mm.sdk.openapi.ShowMessageFromWX;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
 import com.tencent.mm.sdk.openapi.WXAppExtendObject;
 import com.tencent.mm.sdk.openapi.WXMediaMessage;
+import com.tencent.mm.sdk.platformtools.Log;
 import com.xwh.anytransforwechat.MainActivity;
 import com.xwh.anytransforwechat.R;
 
@@ -35,7 +38,21 @@ public class WXEntryActivity extends ActionBarActivity implements
 		super.onCreate(savedInstanceState);
 		iwxapi = WXAPIFactory.createWXAPI(WXEntryActivity.this,
 				MainActivity.APP_ID);
-		iwxapi.handleIntent(getIntent(), this);
+		if (!iwxapi.handleIntent(getIntent(), this)) {
+			getSupportActionBar().hide();
+			setContentView(R.layout.activity_main);
+			Intent intent_send = new Intent(Intent.ACTION_GET_CONTENT);
+			intent_send.setType("*/*");
+			intent_send.addCategory(Intent.CATEGORY_OPENABLE);
+			try {
+				startActivityForResult(
+						Intent.createChooser(intent_send, getResources()
+								.getString(R.string.upload_dialog_title)),
+						FILE_SELECT_REQCODE);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	@Override
@@ -102,7 +119,19 @@ public class WXEntryActivity extends ActionBarActivity implements
 
 	@Override
 	public void onResp(BaseResp resp) {
-
+		switch (resp.errCode) {
+		case BaseResp.ErrCode.ERR_OK:
+			finish();
+			break;
+		case BaseResp.ErrCode.ERR_USER_CANCEL:
+			finish();
+			break;
+		case BaseResp.ErrCode.ERR_AUTH_DENIED:
+			finish();
+			break;
+		default:
+			break;
+		}
 	}
 
 	@Override
@@ -128,10 +157,10 @@ public class WXEntryActivity extends ActionBarActivity implements
 						wxAppExtendObject.filePath = sendFile.getPath();
 						WXMediaMessage msg = new WXMediaMessage();
 						msg.mediaObject = wxAppExtendObject;
-						SendMessageToWX.Req req = new SendMessageToWX.Req(
-								getIntent().getExtras());
+						// SendMessageToWX.Req req = new SendMessageToWX.Req(
+						// getIntent().getExtras());
 						GetMessageFromWX.Resp resp = new GetMessageFromWX.Resp();
-						resp.transaction = req.transaction;
+						resp.transaction = buildTransaction("appdata");
 						resp.message = msg;
 						iwxapi.sendResp(resp);
 						finish();
@@ -145,6 +174,11 @@ public class WXEntryActivity extends ActionBarActivity implements
 		default:
 			break;
 		}
+	}
+
+	private String buildTransaction(String type) {
+		return (type == null) ? String.valueOf(System.currentTimeMillis())
+				: type + System.currentTimeMillis();
 	}
 
 	public final String[][] MIME_MapTable = { { ".3gp", "video/3gpp" },

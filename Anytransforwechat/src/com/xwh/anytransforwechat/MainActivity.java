@@ -2,8 +2,10 @@ package com.xwh.anytransforwechat;
 
 import com.tencent.mm.sdk.openapi.IWXAPI;
 import com.tencent.mm.sdk.openapi.WXAPIFactory;
+import com.xwh.anytransforwechat.wxapi.WXEntryActivity;
 
 import android.support.v7.app.ActionBarActivity;
+import android.content.Intent;
 import android.os.Bundle;
 
 public class MainActivity extends ActionBarActivity {
@@ -23,6 +25,8 @@ public class MainActivity extends ActionBarActivity {
 	private void init() {
 		iwxapi = WXAPIFactory.createWXAPI(this, null);
 		iwxapi.registerApp(APP_ID);
+		startActivity(new Intent(MainActivity.this, WXEntryActivity.class));
+		finish();
 	}
 
 	// ³õÊ¼»¯¿Ø¼þ
